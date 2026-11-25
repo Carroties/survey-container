@@ -35,9 +35,9 @@ Buka <http://127.0.0.1:8000/>. Jika perintah `python` tidak tersedia, gunakan `p
 | `surveys/static/surveys/board.js` | Popup, pemuatan ringkasan, dan hilangnya kartu di tab yang terbuka |
 | `surveys/forms.py` | Validasi data dari formulir |
 | `surveys/views.py` | Alur membuka papan, menambah kartu, dan membaca detail |
-| `surveys/models.py` | Struktur tabel SQLite dan masa aktif tujuh hari |
+| `surveys/models.py` | Struktur tabel survei dan masa aktif tujuh hari |
 
-Tampilan memakai HTML, CSS, dan JavaScript murni. Django merender HTML, memvalidasi form, dan menyimpan kartu di SQLite. Waktu kedaluwarsa dihitung dari waktu terbit dan ditampilkan dalam WIB.
+Tampilan memakai HTML, CSS, dan JavaScript murni. Django merender HTML, memvalidasi form, dan menyimpan kartu. Database bawaan di komputer adalah SQLite. Deployment Vercel memakai PostgreSQL. Waktu kedaluwarsa dihitung dari waktu terbit dan ditampilkan dalam WIB.
 
 ## Penghapusan otomatis
 
@@ -53,7 +53,35 @@ Jalankan dengan lingkungan Python dan lokasi database yang sama dengan aplikasi.
 */15 * * * * cd /opt/survey-container && SURVEY_DB_PATH=/var/lib/survey-container/db.sqlite3 .venv/bin/python manage.py purge_surveys
 ```
 
-## Menyiapkan tautan untuk angkatan
+## Deploy di Vercel
+
+Vercel menjalankan Django sebagai Function. PostgreSQL menyimpan kartu secara persisten dan dapat digunakan bersama oleh semua instance.
+
+1. Hubungkan database PostgreSQL ke proyek di **Storage** pada dashboard Vercel. Integrasi Neon, misalnya, dapat mengisi `DATABASE_URL` secara otomatis. Pastikan variabel-variabel ini tersedia di lingkungan **Production**.
+
+   | Variabel | Nilai |
+   | --- | --- |
+   | `DATABASE_URL` | URL koneksi PostgreSQL dari penyedia database |
+   | `DJANGO_ALLOWED_HOSTS` | Domain Vercel, misalnya `kelompok-8-ddp1.vercel.app`, tanpa `https://` |
+   | `DJANGO_DEBUG` | `0` |
+   | `DJANGO_SECRET_KEY` | Kunci acak dari `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
+
+2. Di folder proyek terbaru, aktifkan `.venv` dan jalankan `python -m pip install -r requirements.txt`. Buka terminal **PowerShell** untuk membuat tabel di PostgreSQL. Saat diminta, tempel URL koneksi dari penyedia database. Jika tersedia, pakai URL koneksi langsung (*unpooled*) ke database yang sama.
+
+   ```powershell
+   $env:DATABASE_URL = Read-Host "URL PostgreSQL produksi"
+   python manage.py migrate --noinput
+   Remove-Item Env:DATABASE_URL
+   ```
+
+   Simpan URL database dan kunci Django di pengaturan Vercel. Keduanya adalah kredensial pribadi.
+
+3. Pastikan Vercel memakai preset **Django**, lalu deploy versi kode ini. Preset Django menjalankan `collectstatic` saat build.
+4. Buka URL produksi, tambahkan survei uji, lalu buka papan dari sesi browser lain untuk memastikan kartunya tersimpan.
+
+Dokumentasi Vercel [Deploy a Django app](https://vercel.com/docs/frameworks/full-stack/django) dan [Postgres on Vercel](https://vercel.com/docs/postgres).
+
+## Deploy di server dengan penyimpanan persisten
 
 Gunakan hosting yang bisa menjalankan Python/Django dengan HTTPS dan direktori database persisten. Jalankan satu instance aplikasi agar semua pengunjung memakai berkas SQLite yang sama. Gunicorn menjalankan aplikasi dan WhiteNoise melayani CSS serta JavaScript.
 
