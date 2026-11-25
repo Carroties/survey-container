@@ -1,0 +1,30 @@
+<div class="survey-detail" data-detail-expires-at="{{ survey.expires_at|date:'c' }}">
+    <span class="detail-icon" aria-hidden="true"><span class="icon-sheet"></span></span>
+    <h2 id="detail-title">{{ survey.title }}</h2>
+    <p class="detail-expiry">
+        <span class="icon-clock" aria-hidden="true"></span>
+        <time datetime="{{ survey.expires_at|date:'c' }}">Aktif hingga {{ survey.expires_at|date:"j F Y, H.i" }} WIB</time>
+    </p>
+    <dl class="detail-fields">
+        <div>
+            <dt>Pengirim</dt>
+            <dd>{{ survey.sender }}</dd>
+        </div>
+        <div>
+            <dt>Kontak</dt>
+            <dd>{{ survey.contact }}</dd>
+        </div>
+        {% if survey.reward %}
+            <div>
+                <dt>Hadiah</dt>
+                <dd>{{ survey.reward }}</dd>
+            </div>
+        {% endif %}
+    </dl>
+    <div class="detail-link">
+        <a class="button button-primary" href="{{ survey.url }}" target="_blank" rel="noopener noreferrer">
+            Buka formulir <span aria-hidden="true">↗</span>
+        </a>
+        <span class="url-preview">{{ survey.url }}</span>
+    </div>
+</div>
